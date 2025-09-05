@@ -12,9 +12,9 @@ import VariantB from '@/components/VariantB';
 export default function Home() {
   const [variant, setVariant] = useState<'A' | 'B'>('A');
   const [showHeatmap, setShowHeatmap] = useState(false);
-  const [showControls, setShowControls] = useState(true);
-  const [showDashboard, setShowDashboard] = useState(true);
-  const [showAIAnalytics, setShowAIAnalytics] = useState(true);
+  const [showControls, setShowControls] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
+  const [showAIAnalytics, setShowAIAnalytics] = useState(false);
 
   // Randomly assign variant on first visit
   useEffect(() => {

@@ -19,22 +19,8 @@ export interface HeatmapData {
 }
 
 export class AIAnalyticsService {
-  private apiKey: string;
-
   constructor() {
-    this.apiKey = 
-      process.env.NEXT_PUBLIC_PERPLEXITY_API_KEY ||
-      (typeof window !== "undefined" ? localStorage.getItem("PERPLEXITY_KEY") || "" : "");
-    console.log('Perplexity API Key Loaded?', !!this.apiKey);
-    console.log('API Key (first 10 chars):', this.apiKey.substring(0, 10) + '...');
-    
-    // Auto-set API key if not found
-    if (!this.apiKey && typeof window !== "undefined") {
-      const key = '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';
-      localStorage.setItem("PERPLEXITY_KEY", key);
-      this.apiKey = key;
-      console.log('🔑 Auto-set Perplexity API key');
-    }
+    console.log('🤖 AIAnalyticsService initialized - using secure server-side API');
   }
 
   async analyzeABTest(
@@ -42,9 +28,6 @@ export class AIAnalyticsService {
     variantBStats: { visitors: number; conversions: number },
     heatmapData: HeatmapData[]
   ): Promise<AITestInsights> {
-    if (!this.apiKey) {
-      throw new Error('Perplexity API key not configured');
-    }
 
     const conversionRateA =
       variantAStats.visitors > 0
@@ -92,31 +75,28 @@ Format your response as JSON with these exact keys:
 `;
 
     try {
-      console.log('🚀 Calling Perplexity API with prompt:', prompt.substring(0, 200) + '...');
+      console.log('🚀 Calling secure server-side API with prompt:', prompt.substring(0, 200) + '...');
       
-      // Direct API call instead of SDK
-      const response = await fetch('https://api.perplexity.ai/chat/completions', {
+      // Call our secure API route
+      const response = await fetch('/api/perplexity', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'sonar-pro',
-          messages: [
-            { role: 'user', content: prompt }
-          ],
-          max_tokens: 1000,
+          prompt,
+          maxTokens: 1000,
           temperature: 0.1,
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`API call failed: ${response.status} ${response.statusText}`);
+        const errorData = await response.json();
+        throw new Error(`API call failed: ${response.status} - ${errorData.error}`);
       }
 
       const data = await response.json();
-      console.log('✅ Perplexity API Response:', data);
+      console.log('✅ Secure API Response received');
 
       const text = data.choices[0]?.message?.content;
       if (!text) {
@@ -132,7 +112,7 @@ Format your response as JSON with these exact keys:
 
       throw new Error('No valid JSON found in response');
     } catch (error) {
-      console.error('❌ Perplexity AI Analytics Error:', error);
+      console.error('❌ Secure API Error:', error);
       console.log('🔄 Falling back to basic insights');
       return this.getFallbackInsights(variantAStats, variantBStats);
     }
@@ -265,15 +245,6 @@ MIN INTENSITY: ${Math.min(...heatmapData.map(d => d.intensity))}
   async generateOptimizationSuggestions(
     variant: 'A' | 'B'
   ): Promise<string[]> {
-    if (!this.apiKey) {
-      return [
-        'Optimize CTA button placement',
-        'Test different color schemes',
-        'Improve page loading speed',
-        'Add social proof elements',
-        'Simplify the conversion funnel',
-      ];
-    }
 
     const prompt = `
 You are a conversion optimization expert. Provide 5 specific, actionable suggestions to improve conversion rates for a landing page variant ${variant}.
@@ -289,19 +260,22 @@ Return as a JSON array of strings: ["suggestion1", "suggestion2", ...]
 `;
 
     try {
-      const response = await fetch('https://api.perplexity.ai/chat/completions', {
+      const response = await fetch('/api/perplexity', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'sonar-pro',
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 500,
+          prompt,
+          maxTokens: 500,
           temperature: 0.1,
         }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`API call failed: ${response.status} - ${errorData.error}`);
+      }
 
       const data = await response.json();
       const text = data.choices[0]?.message?.content;
@@ -311,7 +285,7 @@ Return as a JSON array of strings: ["suggestion1", "suggestion2", ...]
         return JSON.parse(jsonMatch[0]);
       }
     } catch (error) {
-      console.error('Perplexity AI Suggestions Error:', error);
+      console.error('Secure API Suggestions Error:', error);
     }
 
     return [

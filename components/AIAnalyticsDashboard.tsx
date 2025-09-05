@@ -14,6 +14,12 @@ export default function AIAnalyticsDashboard({ onClose }: AIAnalyticsDashboardPr
   const [error, setError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({
+    keyFindings: true,
+    recommendations: true,
+    heatmapAnalysis: false,
+    conversionAnalysis: false
+  });
 
   const aiService = new AIAnalyticsService();
 
@@ -77,9 +83,26 @@ export default function AIAnalyticsDashboard({ onClose }: AIAnalyticsDashboardPr
     }
   };
 
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  const toggleAllSections = () => {
+    const allExpanded = Object.values(expandedSections).every(Boolean);
+    setExpandedSections({
+      keyFindings: !allExpanded,
+      recommendations: !allExpanded,
+      heatmapAnalysis: !allExpanded,
+      conversionAnalysis: !allExpanded
+    });
+  };
+
   return (
-    <div className="fixed top-4 right-4 bg-white rounded-lg shadow-2xl p-6 max-w-md z-50 border">
-      <div className="flex items-center justify-between mb-4">
+    <div className="fixed top-4 right-4 bg-white rounded-lg shadow-2xl max-w-lg z-50 border max-h-[90vh] flex flex-col">
+      <div className="flex items-center justify-between mb-4 p-6 pb-0">
         <h3 className="text-lg font-bold text-gray-900 flex items-center">
           <div className="w-6 h-6 mr-2 flex items-center justify-center">
             <i className="ri-brain-line text-purple-600"></i>
@@ -91,6 +114,15 @@ export default function AIAnalyticsDashboard({ onClose }: AIAnalyticsDashboardPr
             <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
             <span className="text-sm text-gray-600">Perplexity AI</span>
           </div>
+          {insights && (
+            <button
+              onClick={toggleAllSections}
+              className="text-gray-400 hover:text-gray-600 w-4 h-4 flex items-center justify-center"
+              title={Object.values(expandedSections).every(Boolean) ? "Collapse All" : "Expand All"}
+            >
+              <i className={`ri-${Object.values(expandedSections).every(Boolean) ? 'subtract' : 'add'}-line w-4 h-4`}></i>
+            </button>
+          )}
           {onClose && (
             <button
               onClick={onClose}
@@ -102,7 +134,8 @@ export default function AIAnalyticsDashboard({ onClose }: AIAnalyticsDashboardPr
         </div>
       </div>
 
-      {!insights && !loading && (
+      <div className="flex-1 overflow-y-auto px-6 pb-6">
+        {!insights && !loading && (
         <div className="text-center py-8">
           <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <i className="ri-brain-line text-2xl text-purple-600"></i>
@@ -157,35 +190,96 @@ export default function AIAnalyticsDashboard({ onClose }: AIAnalyticsDashboardPr
           </div>
 
           {/* Key Findings */}
-          <div>
-            <h4 className="font-bold text-gray-900 mb-3 flex items-center">
-              <i className="ri-lightbulb-line text-yellow-500 mr-2"></i>
-              Key Findings
-            </h4>
-            <ul className="space-y-2">
-              {insights.keyFindings.map((finding, index) => (
-                <li key={index} className="flex items-start">
-                  <i className="ri-check-line text-green-500 mr-2 mt-0.5"></i>
-                  <span className="text-sm text-gray-700">{finding}</span>
-                </li>
-              ))}
-            </ul>
+          <div className="border border-gray-200 rounded-lg">
+            <button
+              onClick={() => toggleSection('keyFindings')}
+              className="w-full p-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+            >
+              <h4 className="font-bold text-gray-900 flex items-center">
+                <i className="ri-lightbulb-line text-yellow-500 mr-2"></i>
+                Key Findings
+              </h4>
+              <i className={`ri-arrow-${expandedSections.keyFindings ? 'up' : 'down'}-s-line text-gray-400`}></i>
+            </button>
+            {expandedSections.keyFindings && (
+              <div className="px-3 pb-3">
+                <ul className="space-y-2">
+                  {insights.keyFindings.map((finding, index) => (
+                    <li key={index} className="flex items-start">
+                      <i className="ri-check-line text-green-500 mr-2 mt-0.5"></i>
+                      <span className="text-sm text-gray-700">{finding}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           {/* Recommendations */}
-          <div>
-            <h4 className="font-bold text-gray-900 mb-3 flex items-center">
-              <i className="ri-rocket-line text-blue-500 mr-2"></i>
-              AI Recommendations
-            </h4>
-            <ul className="space-y-2">
-              {insights.recommendations.map((rec, index) => (
-                <li key={index} className="flex items-start">
-                  <i className="ri-arrow-right-line text-blue-500 mr-2 mt-0.5"></i>
-                  <span className="text-sm text-gray-700">{rec}</span>
-                </li>
-              ))}
-            </ul>
+          <div className="border border-gray-200 rounded-lg">
+            <button
+              onClick={() => toggleSection('recommendations')}
+              className="w-full p-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+            >
+              <h4 className="font-bold text-gray-900 flex items-center">
+                <i className="ri-rocket-line text-blue-500 mr-2"></i>
+                AI Recommendations
+              </h4>
+              <i className={`ri-arrow-${expandedSections.recommendations ? 'up' : 'down'}-s-line text-gray-400`}></i>
+            </button>
+            {expandedSections.recommendations && (
+              <div className="px-3 pb-3">
+                <ul className="space-y-2">
+                  {insights.recommendations.map((rec, index) => (
+                    <li key={index} className="flex items-start">
+                      <i className="ri-arrow-right-line text-blue-500 mr-2 mt-0.5"></i>
+                      <span className="text-sm text-gray-700">{rec}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          {/* Detailed Analysis Sections */}
+          <div className="space-y-3">
+            {/* Heatmap Analysis */}
+            <div className="border border-gray-200 rounded-lg">
+              <button
+                onClick={() => toggleSection('heatmapAnalysis')}
+                className="w-full p-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+              >
+                <h4 className="font-bold text-gray-900 flex items-center">
+                  <i className="ri-fire-line text-orange-500 mr-2"></i>
+                  Heatmap Analysis
+                </h4>
+                <i className={`ri-arrow-${expandedSections.heatmapAnalysis ? 'up' : 'down'}-s-line text-gray-400`}></i>
+              </button>
+              {expandedSections.heatmapAnalysis && (
+                <div className="px-3 pb-3">
+                  <p className="text-sm text-gray-700 leading-relaxed">{insights.heatmapAnalysis}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Conversion Analysis */}
+            <div className="border border-gray-200 rounded-lg">
+              <button
+                onClick={() => toggleSection('conversionAnalysis')}
+                className="w-full p-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+              >
+                <h4 className="font-bold text-gray-900 flex items-center">
+                  <i className="ri-line-chart-line text-green-500 mr-2"></i>
+                  Conversion Analysis
+                </h4>
+                <i className={`ri-arrow-${expandedSections.conversionAnalysis ? 'up' : 'down'}-s-line text-gray-400`}></i>
+              </button>
+              {expandedSections.conversionAnalysis && (
+                <div className="px-3 pb-3">
+                  <p className="text-sm text-gray-700 leading-relaxed">{insights.conversionAnalysis}</p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Action Buttons */}
@@ -269,9 +363,10 @@ export default function AIAnalyticsDashboard({ onClose }: AIAnalyticsDashboardPr
             </button>
           </div>
         </div>
-      )}
+        )}
+      </div>
 
-      <div className="text-xs text-gray-500 text-center mt-4 pt-4 border-t">
+      <div className="text-xs text-gray-500 text-center mt-4 pt-4 border-t px-6 pb-6">
         <p>Powered by Perplexity AI • Real-time Analysis</p>
         <p suppressHydrationWarning={true}>Last updated: {new Date().toLocaleTimeString()}</p>
       </div>
