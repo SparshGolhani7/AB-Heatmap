@@ -141,12 +141,48 @@ export default function AIAnalyticsDashboard({ onClose }: AIAnalyticsDashboardPr
             <i className="ri-brain-line text-2xl text-purple-600"></i>
           </div>
           <p className="text-gray-600 mb-4">Get AI-powered insights from your A/B test data</p>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+            <p className="text-sm text-yellow-800">
+              <i className="ri-lightbulb-line mr-1"></i>
+              <strong>Tip:</strong> Click "Test A" or "Test B" buttons below to simulate conversions, then analyze to see winner determination!
+            </p>
+          </div>
           <button
             onClick={analyzeData}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 whitespace-nowrap cursor-pointer"
+            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 whitespace-nowrap cursor-pointer mb-4"
           >
             Analyze with AI
           </button>
+          
+          {/* Test Conversion Buttons - Show when no insights */}
+          <div className="pt-4 border-t">
+            <h4 className="font-bold text-gray-900 mb-3 flex items-center text-sm">
+              <i className="ri-test-tube-line text-orange-500 mr-2"></i>
+              Test Conversions First
+            </h4>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  const tracker = AnalyticsTracker.getInstance();
+                  tracker.trackConversion('A', 'test_conversion');
+                  alert('✅ Conversion tracked for Variant A! Now click "Analyze with AI" to see results.');
+                }}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 cursor-pointer"
+              >
+                Test A
+              </button>
+              <button
+                onClick={() => {
+                  const tracker = AnalyticsTracker.getInstance();
+                  tracker.trackConversion('B', 'test_conversion');
+                  alert('✅ Conversion tracked for Variant B! Now click "Analyze with AI" to see results.');
+                }}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 cursor-pointer"
+              >
+                Test B
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

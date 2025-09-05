@@ -54,6 +54,11 @@ A/B TEST DATA:
 HEATMAP DATA ANALYSIS:
 ${heatmapAnalysis}
 
+IMPORTANT: If both variants have 0 conversions, focus on click engagement patterns to determine which variant is more engaging:
+- Which variant has more clicks?
+- Which variant has better click distribution?
+- Which variant shows more user interest/engagement?
+
 FOCUS ON HEATMAP INSIGHTS:
 - Where are users clicking most? (hotspots)
 - What elements are getting the most attention?
@@ -61,7 +66,10 @@ FOCUS ON HEATMAP INSIGHTS:
 - How does user behavior differ between variants?
 - What does the click pattern tell us about user intent?
 
-Provide actionable insights based on the heatmap data patterns, not just conversion numbers.
+For winner determination:
+- If conversions > 0: Use conversion rates
+- If conversions = 0: Use click engagement (more clicks = more engaging)
+- If both have similar engagement: Mark as inconclusive
 
 Format your response as JSON with these exact keys:
 {
@@ -209,7 +217,16 @@ MIN INTENSITY: ${Math.min(...heatmapData.map(d => d.intensity))}
     let winner: 'A' | 'B' | 'inconclusive' = 'inconclusive';
     let confidence = 0;
 
-    if (Math.abs(conversionRateA - conversionRateB) > 1) {
+    // If both have 0 conversions, use visitor count as engagement metric
+    if (variantAStats.conversions === 0 && variantBStats.conversions === 0) {
+      if (variantAStats.visitors > variantBStats.visitors) {
+        winner = 'A';
+        confidence = Math.min((variantAStats.visitors / (variantAStats.visitors + variantBStats.visitors)) * 100, 85);
+      } else if (variantBStats.visitors > variantAStats.visitors) {
+        winner = 'B';
+        confidence = Math.min((variantBStats.visitors / (variantAStats.visitors + variantBStats.visitors)) * 100, 85);
+      }
+    } else if (Math.abs(conversionRateA - conversionRateB) > 1) {
       winner = conversionRateA > conversionRateB ? 'A' : 'B';
       confidence = Math.min(
         Math.abs(conversionRateA - conversionRateB) * 10,
@@ -221,24 +238,27 @@ MIN INTENSITY: ${Math.min(...heatmapData.map(d => d.intensity))}
       winner,
       confidence,
       keyFindings: [
-        `Variant A conversion rate: ${conversionRateA.toFixed(2)}%`,
-        `Variant B conversion rate: ${conversionRateB.toFixed(2)}%`,
+        `Variant A: ${variantAStats.visitors} visitors, ${variantAStats.conversions} conversions (${conversionRateA.toFixed(2)}%)`,
+        `Variant B: ${variantBStats.visitors} visitors, ${variantBStats.conversions} conversions (${conversionRateB.toFixed(2)}%)`,
         `Total visitors: ${variantAStats.visitors + variantBStats.visitors}`,
-        `Total conversions: ${
-          variantAStats.conversions + variantBStats.conversions
-        }`,
+        `Total conversions: ${variantAStats.conversions + variantBStats.conversions}`,
+        variantAStats.conversions === 0 && variantBStats.conversions === 0 
+          ? 'No conversions yet - use "Test Conversions" buttons to simulate conversions'
+          : 'Conversion data available for analysis'
       ],
       recommendations: [
-        'Collect more data for statistical significance',
+        variantAStats.conversions === 0 && variantBStats.conversions === 0 
+          ? 'Click "Test A" or "Test B" buttons to simulate conversions and see winner determination'
+          : 'Collect more data for statistical significance',
         'Test different CTA button colors',
         'Optimize above-the-fold content',
         'A/B test different headlines',
         'Improve mobile responsiveness',
       ],
       heatmapAnalysis:
-        'AI analysis temporarily unavailable. Collecting more heatmap data...',
+        'AI analysis temporarily unavailable. Click "Test Conversions" buttons to generate conversion data, then re-analyze.',
       conversionAnalysis:
-        'AI analysis temporarily unavailable. Please check back later.',
+        'No conversion data available yet. Use the "Test Conversions" buttons in the AI Analytics panel to simulate conversions and see how the system determines winners.',
     };
   }
 
